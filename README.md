@@ -30,7 +30,9 @@ Hver økt er en liste med **steg**, og hvert steg er en liste med **blokker**:
 | `lenke` | Knapp som åpner en nettside |
 | `felt` | Skrivefelt. `rader: 1` gir én linje, større tall gir flere. |
 | `liste-felt` | Flere nummererte enkeltlinjer (`antall: 3`) |
-| `valg` | Knapper eleven kan trykke på, i grupper eller som flat liste |
-| `gjenta` | Samme skjemakort flere ganger, for eksempel «Yrke 1–5» |
+| `valg` | Knapper eleven kan trykke på, i grupper eller som flat liste. `maks: 1` gir ett valg, `maks: 3` maks tre. |
+| `gjenta` | Samme skjemakort flere ganger, for eksempel «Yrke 1–5». Bruk `antall: 5` med `tittel`, eller `titler: ['A', 'B']` for egne navn. |
+| `sorter` | Liste der eleven plasserer hver ting i en kategori (`kategorier`, `elementer`). `flere: true` tillater flere kategorier. `teller` viser en advarsel ved for mange. |
+| `avslor` | «Vis svaret»-boks for spørsmål med fasit |
 
 `gruppe` i hver økt styrer fargen: `meg`, `arbeid`, `veivalg` eller `fagfelt`.

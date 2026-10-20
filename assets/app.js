@@ -89,8 +89,11 @@
     function valgBlokk(b, ctx) {
       var fid = ctx.idp + b.id, sel = new Set(store[fid] || []);
       var grupper = b.grupper || [{ tittel: '', valg: b.valg }];
-      var teller = h('div', { class: 'teller', 'aria-live': 'polite' });
-      function oppdater() { teller.textContent = sel.size ? 'Valgt: ' + sel.size : ''; }
+      var teller = h('div', { class: 'teller', 'aria-live': 'polite' }), chipRefs = [];
+      function oppdater() {
+        chipRefs.forEach(function (r) { r.c.setAttribute('aria-pressed', sel.has(r.v) ? 'true' : 'false'); });
+        teller.textContent = b.maks === 1 ? '' : (sel.size ? (b.maks ? 'Valgt: ' + sel.size + ' av maks ' + b.maks : 'Valgt: ' + sel.size) : (b.maks ? 'Velg maks ' + b.maks : ''));
+      }
       var wrap = h('div', { class: 'felt-wrap', role: 'group', 'aria-labelledby': 'l-' + fid },
         h('span', { class: 'felt-label', id: 'l-' + fid }, b.label),
         b.hint && h('span', { class: 'felt-hint' }, b.hint));
@@ -99,9 +102,10 @@
           g.tittel && h('h4', null, g.tittel),
           h('div', { class: 'chips' }, g.valg.map(function (v) {
             var c = h('button', { type: 'button', class: 'chip', 'aria-pressed': sel.has(v) ? 'true' : 'false' }, v);
+            chipRefs.push({ c: c, v: v });
             c.addEventListener('click', function () {
-              if (sel.has(v)) sel['delete'](v); else sel.add(v);
-              c.setAttribute('aria-pressed', sel.has(v) ? 'true' : 'false');
+              if (sel.has(v)) sel['delete'](v);
+              else { if (b.maks && sel.size >= b.maks) sel['delete'](sel.values().next().value); sel.add(v); }
               store[fid] = Array.from(sel); save(); oppdater();
             });
             return c;
@@ -117,10 +121,50 @@
       } });
       return wrap;
     }
+    function sorterBlokk(b, ctx) {
+      var fid = ctx.idp + b.id, map = store[fid] || {};
+      var teller = h('div', { class: 'teller', 'aria-live': 'polite' });
+      var wrap = h('div', { class: 'felt-wrap sorter', role: 'group', 'aria-labelledby': 'l-' + fid },
+        h('span', { class: 'felt-label', id: 'l-' + fid }, b.label),
+        b.hint && h('span', { class: 'felt-hint' }, b.hint));
+      var refs = [];
+      function oppdater() {
+        refs.forEach(function (r) { r.c.setAttribute('aria-pressed', (map[r.el] || []).indexOf(r.k) > -1 ? 'true' : 'false'); });
+        if (b.teller) {
+          var n = Object.keys(map).filter(function (e) { return (map[e] || []).indexOf(b.teller.kategori) > -1; }).length;
+          teller.textContent = n > b.teller.maks
+            ? 'Du har ' + n + ' på «' + b.teller.kategori + '». Flytt noen, så du bare har ' + b.teller.maks + '.'
+            : (n ? n + ' på «' + b.teller.kategori + '» (maks ' + b.teller.maks + ')' : '');
+        }
+      }
+      b.elementer.forEach(function (el) {
+        var seg = h('div', { class: 'seg' }, b.kategorier.map(function (k) {
+          var c = h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false' }, k);
+          refs.push({ c: c, el: el, k: k });
+          c.addEventListener('click', function () {
+            var cur = map[el] || [], i = cur.indexOf(k);
+            if (b.flere) { if (i > -1) cur.splice(i, 1); else cur.push(k); } else { cur = i > -1 ? [] : [k]; }
+            if (cur.length) map[el] = cur; else delete map[el];
+            store[fid] = map; save(); oppdater();
+          });
+          return c;
+        }));
+        wrap.append(h('div', { class: 'sorterrad' }, h('span', { class: 'sorter-navn' }, el), seg));
+      });
+      wrap.append(teller); oppdater();
+      reg.push({ steg: ctx.steg, group: ctx.group, label: b.label, read: function () {
+        return b.kategorier.map(function (k) {
+          var v = b.elementer.filter(function (el) { return (map[el] || []).indexOf(k) > -1; });
+          return v.length ? k + ': ' + v.join(', ') : '';
+        }).filter(Boolean).join('\n');
+      } });
+      return wrap;
+    }
     function gjentaBlokk(b, ctx) {
       var out = h('div', { class: 'blokk' });
-      for (var i = 1; i <= b.antall; i++) {
-        var grp = b.tittel + ' ' + i;
+      var n = b.titler ? b.titler.length : b.antall;
+      for (var i = 1; i <= n; i++) {
+        var grp = b.titler ? b.titler[i - 1] : b.tittel + ' ' + i;
         var c2 = { steg: ctx.steg, idp: ctx.idp + b.id + '-' + i + '-', group: grp };
         out.append(h('section', { class: 'skrivekort' },
           h('h3', null, grp),
@@ -137,6 +181,7 @@
         case 'liste-felt': return listeBlokk(b, ctx);
         case 'valg': return valgBlokk(b, ctx);
         case 'gjenta': return gjentaBlokk(b, ctx);
+        case 'sorter': return sorterBlokk(b, ctx);
         case 'tekst': return h('div', { class: 'blokk' }, b.tittel && h('p', { class: 'tittel' }, b.tittel), b.avsnitt.map(function (t) { return h('p', null, rich(t)); }));
         case 'liste': return h('div', { class: 'blokk' }, b.tittel && h('p', { class: 'tittel' }, b.tittel), liste(b.punkter, b.nummerert));
         case 'poeng': return h('div', { class: 'blokk' }, h('div', { class: 'poeng' }, h('p', null, rich(b.tekst))));
@@ -154,6 +199,8 @@
         case 'ord': return h('div', { class: 'blokk' }, b.tittel && h('p', { class: 'tittel' }, b.tittel), h('ul', { class: 'ord' }, b.ord.map(function (w) { return h('li', null, w); })));
         case 'flyt': return h('div', { class: 'blokk' }, b.tittel && h('p', { class: 'tittel' }, b.tittel),
           h('ul', { class: 'flyt' }, b.trinn.map(function (t, i) { return [i ? h('li', { class: 'pil', 'aria-hidden': 'true' }, '→') : null, h('li', null, t)]; })));
+        case 'avslor': return h('div', { class: 'blokk' }, h('details', { class: 'avslor' },
+          h('summary', null, b.sporsmal), h('div', { class: 'svar' }, (b.svar instanceof Array ? b.svar : [b.svar]).map(function (t) { return h('p', null, rich(t)); }))));
         case 'lenke': return h('div', { class: 'blokk' }, h('a', { class: 'lenkeboks', href: b.url, target: '_blank', rel: 'noopener' }, b.tekst, b.merknad && h('small', null, b.merknad)));
       }
       return null;
