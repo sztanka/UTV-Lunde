@@ -39,7 +39,7 @@
   if (!id) return feil('Adressen mangler økt-nummer.');
 
   var s = document.createElement('script');
-  s.src = 'data/okt-' + id + '.js';
+  s.src = 'data/okt-' + id + '.js?v=' + (window.UTV_VERSJON || '');
   s.onload = function () { if (window.UTV_OKT) start(window.UTV_OKT); else feil('Filen ble lastet, men inneholdt ingen økt.'); };
   s.onerror = function () { feil('Økt ' + id + ' er ikke lagt inn ennå.'); };
   document.head.append(s);
@@ -222,7 +222,7 @@
       var sid = 'steg-' + (i + 1);
       var sec = h('section', { class: 'steg', id: sid, 'aria-labelledby': sid + '-h' },
         h('header', null, h('span', { class: 'sn', 'aria-hidden': 'true' }, String(i + 1)), h('h2', { id: sid + '-h' }, st.tittel), st.tid && h('span', { class: 'tid' }, st.tid)));
-      st.blokker.forEach(function (b) { sec.append(blokk(b, { steg: st.tittel, idp: sid + '-', group: '' })); });
+      st.blokker.forEach(function (b) { var n = blokk(b, { steg: st.tittel, idp: sid + '-', group: '' }); if (n) sec.append(n); else if (window.console) console.warn('Ukjent blokktype:', b.type); });
       innhold.append(sec);
       skinne.append(h('li', null, h('a', { href: '#' + sid }, st.tittel)));
     });
