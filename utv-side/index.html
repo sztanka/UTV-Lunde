@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Utdanningsvalg – øktene</title>
+<meta name="description" content="Øktene i utdanningsvalg for ungdomsskolen. Elevene jobber og skriver rett på siden.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=20261020">
+</head>
+<body>
+<header class="forside-hero"><div class="wrap">
+  <h1><span>Utdanningsvalg</span></h1>
+  <p>Velg en økt. Les gjennom stegene, skriv svarene rett på siden, og kopier dem når du er ferdig.</p>
+</div></header>
+<main class="wrap" id="liste" aria-live="polite"></main>
+<footer class="wrap fot">
+  <p>Det du skriver blir værende i nettleseren din på denne maskinen, og sendes ikke til noen. Lærere kan fritt bruke og tilpasse innholdet. Se README.md for hvordan du legger inn eller endrer en økt.</p>
+</footer>
+<script src="data/okter.js?v=20261020"></script>
+<script>
+(function(){
+  var L=window.UTV_LISTE, root=document.getElementById('liste');
+  function h(t,a){var e=document.createElement(t);for(var k in a||{})if(a[k]!=null)e.setAttribute(k,a[k]);[].slice.call(arguments,2).forEach(function(c){if(c==null)return;e.append(c.nodeType?c:document.createTextNode(c))});return e}
+  L.grupper.forEach(function(g){
+    var sec=h('section',{class:'gruppe g-'+g.id,'aria-labelledby':'g-'+g.id},h('h2',{id:'g-'+g.id},g.tittel),h('p',{class:'gruppe-tekst'},g.tekst));
+    var rad=h('div',{class:'skilt-rad'});
+    L.okter.filter(function(o){return o.gruppe===g.id}).forEach(function(o){
+      var inn=[h('div',{class:'nr','aria-hidden':'true'},h('small',null,'Økt'),o.nrTekst||String(o.nr)),h('h3',null,o.tittel),h('p',null,o.tekst)];
+      if(o.merke) inn.push(h('span',{class:'tag'},o.merke));
+      if(o.klar){var a=h('a',{class:'skilt',href:'okt.html?id='+String(o.nr).padStart(2,'0')});inn.forEach(function(n){a.append(n)});rad.append(a)}
+      else{var d=h('div',{class:'skilt kommer','aria-label':'Økt '+o.nr+' – kommer snart'});inn.push(h('span',{class:'tag'},'Kommer snart'));inn.forEach(function(n){d.append(n)});rad.append(d)}
+    });
+    sec.append(rad);root.append(sec);
+  });
+})();
+</script>
+</body>
+</html>

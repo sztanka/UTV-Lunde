@@ -160,6 +160,106 @@
       } });
       return wrap;
     }
+    /* ---------- RIASEC-test ---------- */
+    var riasecLyttere = [];
+    function riasecData() {
+      var R = okt.riasec, ans = store.riasec || {}, sc = {}, besvart = 0, n = 0;
+      Object.keys(R.typer).forEach(function (k) {
+        sc[k] = 0;
+        R.spm[k].forEach(function (_, i) { n++; var v = ans[k + i]; if (v) { sc[k] += v; besvart++; } });
+      });
+      var rekke = Object.keys(R.typer).sort(function (x, y) { return sc[y] - sc[x] || 'RIASEC'.indexOf(x) - 'RIASEC'.indexOf(y); });
+      return { sc: sc, besvart: besvart, n: n, topp: rekke.slice(0, 3), maks: n / Object.keys(R.typer).length * 5 };
+    }
+    function riasecTest(b, ctx) {
+      var R = okt.riasec, typer = Object.keys(R.typer), ant = R.spm[typer[0]].length, liste = [];
+      for (var i = 0; i < ant; i++) typer.forEach(function (k) { liste.push({ k: k, i: i, t: R.spm[k][i] }); });
+      var fremdrift = h('div', { class: 'rfremdrift', 'aria-live': 'polite' });
+      var stolpe = h('div', { class: 'rstolpe' }, h('div', { class: 'rstolpe-fyll' }));
+      var refs = [];
+      function oppdater() {
+        var d = riasecData(), ans = store.riasec || {};
+        fremdrift.textContent = d.besvart === d.n ? 'Alle ' + d.n + ' utsagn er besvart. Se profilen din under.' : 'Besvart ' + d.besvart + ' av ' + d.n;
+        stolpe.firstChild.style.width = Math.round(d.besvart / d.n * 100) + '%';
+        refs.forEach(function (r) { r.c.setAttribute('aria-pressed', ans[r.key] === r.v ? 'true' : 'false'); });
+      }
+      var wrap = h('div', { class: 'felt-wrap riasec' },
+        h('div', { class: 'rlegende' },
+          h('strong', null, 'Slik svarer du: '), '1 = Passer ikke, 2 = Passer litt, 3 = Middels, 4 = Passer ganske godt, 5 = Passer veldig godt.'),
+        h('div', { class: 'rstatus' }, fremdrift, stolpe));
+      liste.forEach(function (q, idx) {
+        var key = q.k + q.i;
+        var seg = h('div', { class: 'rskala', role: 'radiogroup', 'aria-label': q.t }, [1, 2, 3, 4, 5].map(function (v) {
+          var c = h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', 'aria-label': v + ' av 5' }, String(v));
+          refs.push({ c: c, key: key, v: v });
+          c.addEventListener('click', function () {
+            store.riasec = store.riasec || {};
+            if (store.riasec[key] === v) delete store.riasec[key]; else store.riasec[key] = v;
+            save(); oppdater(); riasecLyttere.forEach(function (f) { f(); });
+          });
+          return c;
+        }));
+        wrap.append(h('div', { class: 'rspm', 'data-key': key }, h('p', null, (idx + 1) + '. ' + q.t), seg,
+          h('div', { class: 'rkant' }, h('span', null, 'Passer ikke'), h('span', null, 'Passer veldig godt'))));
+      });
+      oppdater();
+      return wrap;
+    }
+    function svgEl(tag, attrs) { var e = document.createElementNS('http://www.w3.org/2000/svg', tag); Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); }); return e; }
+    function riasecResultat(b, ctx) {
+      var R = okt.riasec, typer = Object.keys(R.typer);
+      var rot = h('div', { class: 'felt-wrap rresultat', 'aria-live': 'polite' });
+      function tekstResultat() {
+        var d = riasecData(); if (d.besvart < d.n) return '';
+        return 'Min RIASEC-kode: ' + d.topp.join('') + '\n' + typer.map(function (k) { return k + ' (' + R.typer[k].navn + '): ' + d.sc[k] + ' av ' + d.maks; }).join('\n');
+      }
+      function tegn() {
+        var d = riasecData(); rot.replaceChildren();
+        if (d.besvart < d.n) {
+          var forste = null;
+          var ans = store.riasec || {};
+          typer.some(function (k) { return R.spm[k].some(function (_, i) { if (!ans[k + i]) { forste = k + i; return true; } }); });
+          rot.append(h('div', { class: 'instruks' }, h('div', null,
+            h('p', null, 'Du har ' + (d.n - d.besvart) + ' utsagn igjen. Når alle er besvart, dukker profilen din opp her.'),
+            h('p', null, h('a', { href: '#steg-' + R.testSteg }, 'Gå tilbake til testen')))));
+          return;
+        }
+        var punkter = typer.map(function (k, i) {
+          var ang = -Math.PI / 2 + i * 2 * Math.PI / 6, r = 100 * d.sc[k] / d.maks;
+          return [150 + r * Math.cos(ang), 150 + r * Math.sin(ang)];
+        });
+        var svg = svgEl('svg', { viewBox: '0 0 300 300', class: 'rhex', role: 'img', 'aria-label': 'Sekskantdiagram av RIASEC-profilen: ' + typer.map(function (k) { return k + ' ' + d.sc[k]; }).join(', ') });
+        [0.25, 0.5, 0.75, 1].forEach(function (f) {
+          svg.append(svgEl('polygon', { points: typer.map(function (k, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / 6; return (150 + 100 * f * Math.cos(a)) + ',' + (150 + 100 * f * Math.sin(a)); }).join(' '), fill: 'none', stroke: '#C9D0DE', 'stroke-width': 1 }));
+        });
+        typer.forEach(function (k, i) {
+          var a = -Math.PI / 2 + i * 2 * Math.PI / 6;
+          svg.append(svgEl('line', { x1: 150, y1: 150, x2: 150 + 100 * Math.cos(a), y2: 150 + 100 * Math.sin(a), stroke: '#C9D0DE', 'stroke-width': 1 }));
+          var t = svgEl('text', { x: 150 + 128 * Math.cos(a), y: 150 + 128 * Math.sin(a) + 7, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 800, fill: d.topp.indexOf(k) > -1 ? 'var(--accent)' : '#12203A' });
+          t.textContent = k; svg.append(t);
+        });
+        svg.append(svgEl('polygon', { points: punkter.map(function (p) { return p.join(','); }).join(' '), fill: 'var(--accent)', 'fill-opacity': .28, stroke: 'var(--accent)', 'stroke-width': 3, 'stroke-linejoin': 'round' }));
+        punkter.forEach(function (p) { svg.append(svgEl('circle', { cx: p[0], cy: p[1], r: 4.5, fill: 'var(--accent)' })); });
+        var staver = typer.map(function (k) {
+          return h('div', { class: 'rrad' }, h('span', { class: 'rnavn' }, h('b', null, k), ' ' + R.typer[k].navn),
+            h('span', { class: 'rbar', 'aria-hidden': 'true' }, h('span', { class: 'rfyll' + (d.topp.indexOf(k) > -1 ? ' topp' : ''), style: 'width:' + Math.round(100 * d.sc[k] / d.maks) + '%' })),
+            h('span', { class: 'rpoeng' }, d.sc[k] + ' / ' + d.maks));
+        });
+        rot.append(
+          h('div', { class: 'rkode' }, h('div', { class: 'rkode-bokstaver' }, d.topp.join('')), h('p', null, 'Dette er de tre områdene som fikk høyest poengsum hos deg. Er to områder nesten like høye, er de like sterke for deg.')),
+          h('div', { class: 'rgraf' }, svg, h('div', { class: 'rstaver' }, staver)),
+          h('div', { class: 'blokk kortrad' }, d.topp.map(function (k) {
+            var T = R.typer[k];
+            return h('div', { class: 'kort' }, h('h3', null, k + ': ' + T.navn), h('p', null, T.sitat),
+              h('p', { class: 'tittel', style: 'font-size:16px;margin:8px 0 2px' }, 'Eksempler på yrker'), h('p', null, T.yrker),
+              h('p', { class: 'tittel', style: 'font-size:16px;margin:8px 0 2px' }, 'Utdanningsprogram å undersøke'), h('p', null, T.programmer));
+          })),
+          h('p', { class: 'felt-hint' }, 'Resultatet er ikke en fasit. Det viser hva du sa at du liker akkurat nå.'));
+      }
+      riasecLyttere.push(tegn); tegn();
+      reg.push({ steg: ctx.steg, group: ctx.group, label: 'Min RIASEC-profil', read: tekstResultat });
+      return rot;
+    }
     function gjentaBlokk(b, ctx) {
       var out = h('div', { class: 'blokk' });
       var n = b.titler ? b.titler.length : b.antall;
@@ -182,6 +282,8 @@
         case 'valg': return valgBlokk(b, ctx);
         case 'gjenta': return gjentaBlokk(b, ctx);
         case 'sorter': return sorterBlokk(b, ctx);
+        case 'riasec-test': return riasecTest(b, ctx);
+        case 'riasec-resultat': return riasecResultat(b, ctx);
         case 'tekst': return h('div', { class: 'blokk' }, b.tittel && h('p', { class: 'tittel' }, b.tittel), b.avsnitt.map(function (t) { return h('p', null, rich(t)); }));
         case 'liste': return h('div', { class: 'blokk' }, b.tittel && h('p', { class: 'tittel' }, b.tittel), liste(b.punkter, b.nummerert));
         case 'poeng': return h('div', { class: 'blokk' }, h('div', { class: 'poeng' }, h('p', null, rich(b.tekst))));

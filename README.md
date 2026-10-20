@@ -38,4 +38,4 @@ Hver økt er en liste med **steg**, og hvert steg er en liste med **blokker**:
 `gruppe` i hver økt styrer fargen: `meg`, `arbeid`, `veivalg` eller `fagfelt`.
 
 ## Når du har oppdatert siden
-GitHub Pages lagrer filer i nettleseren i opptil ti minutter. Bytt versjonsnummeret (`20261020`) til dagens dato i `index.html` og `okt.html` (tre steder i `okt.html`: stil, `UTV_VERSJON` og `app.js`) når du endrer noe, så får alle de nyeste filene med en gang.
+GitHub Pages lagrer filer i nettleseren i opptil ti minutter. Bytt versjonsnummeret (`20261021`) til dagens dato i `index.html` og `okt.html` (tre steder i `okt.html`: stil, `UTV_VERSJON` og `app.js`) når du endrer noe, så får alle de nyeste filene med en gang.

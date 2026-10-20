@@ -6,6 +6,7 @@ window.UTV_LISTE = {
     { id: 'fagfelt', tittel: 'Fagfelt og evaluering', tekst: 'Fordyp deg i fagfelt, og se tilbake på det du har lært.' }
   ],
   okter: [
+    { nr: 2, gruppe: 'meg', klar: true, tittel: 'Hva er din personlighet?', tekst: 'Ta en RIASEC-interessetest og finn ut hvilke arbeidsmiljøer og utdanninger som kan passe deg.' },
     { nr: 3, gruppe: 'meg', klar: true, tittel: 'Hva er jeg god på?', tekst: 'Oppdag hva du mestrer og hva du kan bidra med, ikke bare hva du får karakterer i.' },
     { nr: 4, gruppe: 'meg', klar: true, tittel: 'Hva er viktig for meg?', tekst: 'Verdier: hva vil du at livet og arbeidslivet ditt skal inneholde?' },
     { nr: 5, gruppe: 'arbeid', klar: true, tittel: 'Yrker rundt oss', tekst: 'Yrker finnes overalt, også der du minst tenker over det.' },
