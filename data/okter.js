@@ -20,6 +20,9 @@ window.UTV_LISTE = {
     { nr: 13, nrTekst: '13–15', gruppe: 'fagfelt', klar: true, tittel: 'Fagfelt i fokus', tekst: 'Utforsk ett fagfelt grundig over tre økter.' },
     { nr: 16, gruppe: 'fagfelt', klar: true, tittel: 'Midtårsevaluering', tekst: 'Hva har du lært så langt, og hva vil du med resten?', merke: 'Kan hoppes over' },
     { nr: 17, gruppe: 'fagfelt', klar: true, tittel: 'Service, salg, reiseliv, økonomi og samfunn', tekst: 'Skriv «En dag som …» for et yrke i feltet.' },
-    { nr: 18, gruppe: 'fagfelt', klar: true, tittel: 'Natur, dyr og miljø', tekst: 'Ett dyr, et helt arbeidsliv.' }
+    { nr: 18, gruppe: 'fagfelt', klar: true, tittel: 'Natur, dyr og miljø', tekst: 'Ett dyr, et helt arbeidsliv.' },
+    { nr: 19, gruppe: 'fagfelt', klar: true, tittel: 'Helse, kropp og aktivitet', tekst: 'Hva skal til for å hjelpe et menneske? Undersøk yrkene som er et lagarbeid rundt kroppen.' },
+    { nr: 20, gruppe: 'fagfelt', klar: true, tittel: 'Kreative fag, medier og kunst/design', tekst: 'Kan kreativitet være en jobb? Lag noe selv og undersøk yrkene bak.' },
+    { nr: 21, gruppe: 'fagfelt', klar: true, tittel: 'Yrker jeg ikke kjenner', tekst: 'Det finnes jobber du ikke visste fantes. Gjett, utforsk og bygg din egen yrkesbank.' }
   ]
 };
